@@ -7,7 +7,7 @@ import { Map, Marker } from "react-map-gl/maplibre";
 const socket = io(import.meta.env.VITE_SERVER_URL);
 
 function App() {
-  const [drivers, setDrivers] = useState({});
+  const [drivers, setDrivers] = useState([]);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const driverId = crypto.randomUUID().split("-")[0];
@@ -17,7 +17,7 @@ function App() {
     socket.on("driver:update", (data) => {
       console.log(data);
 
-      setDrivers((prev) => ({ ...prev, [data.driverId]: data }));
+      setDrivers((prev) => ([...prev,{...data}]));
     });
 
     // Start sending location using navigator.geolocation
@@ -55,9 +55,9 @@ function App() {
     >
       {Object.values(drivers).map((driver) => (
         <Marker
-          key={driver.driverId}
-          longitude={driver.lng}
-          latitude={driver.lat}
+          key={driver?.driverId}
+          longitude={driver?.lng}
+          latitude={driver?.lat}
           color="red"
         />
       ))}
