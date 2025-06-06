@@ -17,7 +17,7 @@ function App() {
     socket.on("driver:update", (data) => {
       console.log(data);
 
-      setDrivers((prev) => ([...prev,{...data}]));
+      setDrivers((prev) => [...prev, { ...data }]);
     });
 
     // Start sending location using navigator.geolocation
@@ -34,14 +34,15 @@ function App() {
           setLng(longitude);
         },
         (err) => console.error("Geolocation error:", err),
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 1000 }
       );
 
       return () => navigator.geolocation.clearWatch(watchId);
     } else {
       console.error("Geolocation not supported");
     }
-  }, []);
+    console.log(drivers);
+  }, [drivers, lat, lng]);
 
   return (
     <Map
