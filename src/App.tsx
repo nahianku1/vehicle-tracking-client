@@ -3,7 +3,6 @@ import { io, Socket } from "socket.io-client";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-
 type Driver = {
   id: string;
   lat: number;
@@ -19,14 +18,12 @@ function App() {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    socketRef.current = io(import.meta.env.VITE_SERVER_URL, {
-      withCredentials: true,
-    });
+    socketRef.current = io(import.meta.env.VITE_SERVER_URL);
 
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [])
+  }, []);
 
   useEffect(() => {
     // Listen for location updates
