@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const socket = io(import.meta.env.VITE_SERVER_URL);
 
 type Driver = {
   id: string;
@@ -17,20 +16,31 @@ function App() {
   const [lng, setLng] = useState<number | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    socketRef.current = io(import.meta.env.VITE_SERVER_URL, {
+      withCredentials: true,
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     // Listen for location updates
-    socket.on("driver:update", (data: Driver) => {
+    socketRef.current!.on("driver:update", (data: Driver) => {
+      console.log(data);
       setDrivers(data);
     });
-    
 
     // Start sending location using navigator.geolocation
     if (navigator.geolocation) {
       const watchId = navigator.geolocation.watchPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
-          socket.emit("driver:location", {
+          socketRef.current!.emit("driver:location", {
             lat: latitude,
             lng: longitude,
           });
