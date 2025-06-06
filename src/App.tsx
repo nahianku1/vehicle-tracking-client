@@ -15,8 +15,6 @@ function App() {
   useEffect(() => {
     // Listen for location updates
     socket.on("driver:update", (data) => {
-      console.log(data);
-
       setDrivers((prev) => [...prev, { ...data }]);
     });
 
@@ -42,7 +40,7 @@ function App() {
       console.error("Geolocation not supported");
     }
     console.log(drivers);
-  }, [drivers, lat, lng]);
+  }, []);
 
   return (
     <Map
