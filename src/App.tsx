@@ -26,7 +26,7 @@ function App() {
     return () => {
       socketRef.current?.disconnect();
     };
-  }, []);
+  }, [])
 
   useEffect(() => {
     // Listen for location updates
