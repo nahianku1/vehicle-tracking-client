@@ -10,7 +10,7 @@ function App() {
   const [drivers, setDrivers] = useState({});
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
-  const driverId = "driver1";
+  const driverId = crypto.randomUUID().split("-")[0];
 
   useEffect(() => {
     // Listen for location updates
