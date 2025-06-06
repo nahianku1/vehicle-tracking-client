@@ -7,7 +7,7 @@ import { Map, Marker } from "react-map-gl/maplibre";
 const socket = io(import.meta.env.VITE_SERVER_URL);
 
 function App() {
-  const [drivers, setDrivers] = useState([]);
+  const [drivers, setDrivers] = useState({});
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const driverId = crypto.randomUUID().split("-")[0];
@@ -15,7 +15,8 @@ function App() {
   useEffect(() => {
     // Listen for location updates
     socket.on("driver:update", (data) => {
-      setDrivers((prev) => [...prev, { ...data }]);
+      console.log(data);
+      setDrivers((prev) => ({ ...prev, [data.driverId]: data }));
     });
 
     // Start sending location using navigator.geolocation
@@ -39,7 +40,6 @@ function App() {
     } else {
       console.error("Geolocation not supported");
     }
-    console.log(drivers);
   }, []);
 
   return (
