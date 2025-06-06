@@ -34,7 +34,7 @@ function App() {
           setLng(longitude);
         },
         (err) => console.error("Geolocation error:", err),
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 1000 }
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
       );
 
       return () => navigator.geolocation.clearWatch(watchId);
