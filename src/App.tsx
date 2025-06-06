@@ -1,23 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
-import { Map, Marker } from "react-map-gl/maplibre";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const socket = io(import.meta.env.VITE_SERVER_URL);
 
+type Driver = {
+  id: string;
+  lat: number;
+  lng: number;
+}[];
+
 function App() {
-  const [drivers, setDrivers] = useState({});
+  const [drivers, setDrivers] = useState<Driver>([]);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
-  const driverId = crypto.randomUUID().split("-")[0];
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<Record<string, L.Marker>>({});
 
   useEffect(() => {
     // Listen for location updates
-    socket.on("driver:update", (data) => {
-      console.log(data);
-      setDrivers((prev) => ({ ...prev, [data.driverId]: data }));
+    socket.on("driver:update", (data: Driver) => {
+      setDrivers(data);
     });
+    
 
     // Start sending location using navigator.geolocation
     if (navigator.geolocation) {
@@ -25,7 +31,6 @@ function App() {
         (pos) => {
           const { latitude, longitude } = pos.coords;
           socket.emit("driver:location", {
-            driverId,
             lat: latitude,
             lng: longitude,
           });
@@ -42,26 +47,42 @@ function App() {
     }
   }, []);
 
-  return (
-    <Map
-      mapLib={maplibregl}
-      initialViewState={{
-        longitude: lat as number,
-        latitude: lng as number,
-      }}
-      style={{ width: "100vw", height: "100vh" }}
-      mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-    >
-      {Object.values(drivers).map((driver) => (
-        <Marker
-          key={driver?.driverId}
-          longitude={driver?.lng}
-          latitude={driver?.lat}
-          color="red"
-        />
-      ))}
-    </Map>
-  );
+  useEffect(() => {
+    if (lat !== null && lng !== null && !mapRef.current) {
+      mapRef.current = L.map("map").setView([lat, lng], 16);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(mapRef.current);
+    }
+  }, [lat, lng]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove old markers
+    Object.values(markersRef.current).forEach((marker) => {
+      mapRef.current?.removeLayer(marker);
+    });
+    markersRef.current = {};
+
+    // Add new markers
+    drivers.forEach((driver) => {
+      if (driver.lat && driver.lng) {
+        const marker = L.marker([driver.lat, driver.lng], {
+          icon: L.icon({
+            iconUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+          }),
+        }).addTo(mapRef.current!);
+        markersRef.current[driver.id] = marker;
+      }
+    });
+  }, [drivers]);
+
+  return <div id="map" style={{ width: "100vw", height: "100vh" }} />;
 }
 
 export default App;
